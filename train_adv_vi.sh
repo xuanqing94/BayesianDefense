@@ -5,9 +5,9 @@ steps=10
 max_norm=0.03125
 sigma_0=0.05
 init_s=0.05
-data=cifar10
-root=~/data/cifar10-py
-model=wresnet
+data=imagenet-sub
+root=/data1/xqliu
+model=vgg
 model_out=./checkpoint/${data}_${model}_adv_vi
 echo "model_out: " ${model_out}
 CUDA_VISIBLE_DEVICES=0 ./main_adv_vi.py \

@@ -66,7 +66,7 @@ else:
 # Model
 if opt.model == 'vgg':
     from models.vgg_vi import VGG
-    net = nn.DataParallel(VGG(opt.sigma_0, len(trainset), opt.init_s, 'VGG16', img_width=img_width).cuda())
+    net = nn.DataParallel(VGG(opt.sigma_0, len(trainset), opt.init_s, 'VGG16', nclass, img_width=img_width).cuda())
 else:
     raise NotImplementedError('Invalid model')
 

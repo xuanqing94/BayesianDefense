@@ -9,12 +9,12 @@ import torchvision
 import torchvision.transforms as transforms
 
 #from models.resnet import ResNet18
-from models.vgg_noise import VGG
+from models.vgg import VGG
 from attacker.pgd import Linf_PGD
 
 # arguments
 parser = argparse.ArgumentParser(description='Bayesian Inference')
-parser.add_argument('--model_in', default='./checkpoint/vgg16_noise.pth', type=str)
+parser.add_argument('--model_in', default='./checkpoint/cifar10_vgg_plain.pth', type=str)
 parser.add_argument('--eps', type=float, required=True)
 opt = parser.parse_args()
 
@@ -27,8 +27,8 @@ testset = torchvision.datasets.CIFAR10(root='/home/luinx/data/cifar10-py', train
 testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=True, num_workers=2)
 
 # load model
-#model = VGG('VGG16')
-model = VGG(1, 1, -1, 'VGG16')
+model = nn.DataParallel(VGG('VGG16', 10))
+#model = VGG(1, 1, -1, 'VGG16')
 #model = VGG(opt.sigma_0, 1, 'VGG16', init_noise=0.2, inner_noise=0.1, init_s=-1)
 #model = ResNet18(opt.sigma_0, 1)
 model.load_state_dict(torch.load(opt.model_in))
@@ -50,7 +50,6 @@ def ensemble_inference(x_in, nclass, steps):
 correct = 0
 total = 0
 max_iter = 100
-conv = model.features[0]
 for it, (x, y) in enumerate(testloader):
     x, y = x.cuda(), y.cuda()
     x_adv = Linf_PGD(x, y, model, 20, opt.eps)

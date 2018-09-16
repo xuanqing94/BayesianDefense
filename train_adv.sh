@@ -5,7 +5,7 @@ steps=10
 max_norm=0.03125
 data=cifar10
 root=~/data/cifar10-py
-model=wresnet
+model=vgg
 model_out=./checkpoint/${data}_${model}_adv
 echo "model_out: " ${model_out}
 CUDA_VISIBLE_DEVICES=2,3 ./main_adv.py \

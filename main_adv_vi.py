@@ -31,6 +31,7 @@ opt.init_s = math.log(opt.init_s) # init_s is log(std)
 print('==> Preparing data..')
 if opt.data == 'cifar10':
     nclass = 10
+    img_width = 32
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -44,17 +45,28 @@ if opt.data == 'cifar10':
     testset = torchvision.datasets.CIFAR10(root=opt.root, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 elif opt.data == 'imagenet-sub':
-    raise NotImplementedError
+    nclass = 153
+    img_width = 128
+    transform_train = transforms.Compose([
+        transforms.RandomResizedCrop(128, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    trainset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat', transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+    testset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat_val', transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+
 else:
     raise NotImplementedError('Invalid dataset')
 
 # Model
 if opt.model == 'vgg':
     from models.vgg_vi import VGG
-    net = nn.DataParallel(VGG(opt.sigma_0, len(trainset), opt.init_s, 'VGG16').cuda())
-elif opt.model == 'wresnet':
-    from models.wideresnet_vi import wresnet
-    net = nn.DataParallel(wresnet(opt.sigma_0, len(trainset), opt.init_s, nclass, 28, 10).cuda())
+    net = nn.DataParallel(VGG(opt.sigma_0, len(trainset), opt.init_s, 'VGG16', img_width=img_width).cuda())
 else:
     raise NotImplementedError('Invalid model')
 

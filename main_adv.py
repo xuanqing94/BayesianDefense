@@ -15,7 +15,7 @@ from attacker.pgd import Linf_PGD
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
-parser.add_argument('--steps', default=10, type=int, help='#adv. steps')
+parser.add_argument('--steps', required=True, type=int, help='#adv. steps')
 parser.add_argument('--max_norm', required=True, type=float, help='Linf-norm in PGD')
 parser.add_argument('--data', required=True, type=str, help='dataset name')
 parser.add_argument('--model', required=True, type=str, help='model name')
@@ -28,6 +28,7 @@ opt = parser.parse_args()
 print('==> Preparing data..')
 if opt.data == 'cifar10':
     nclass = 10
+    img_width = 32
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -41,6 +42,21 @@ if opt.data == 'cifar10':
     testset = torchvision.datasets.CIFAR10(root=opt.root, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 elif opt.data == 'imagenet-sub':
+    nclass = 153
+    img_width = 128
+    transform_train = transforms.Compose([
+        transforms.RandomResizedCrop(128, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    trainset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat', transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+    testset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat_val', transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+elif opt.data == 'imagenet-sub':
     raise NotImplementedError
 else:
     raise NotImplementedError('Invalid dataset')
@@ -48,10 +64,7 @@ else:
 # Model
 if opt.model == 'vgg':
     from models.vgg import VGG
-    net = nn.DataParallel(VGG('VGG16').cuda())
-elif opt.model == 'wresnet':
-    from models.wideresnet import wresnet
-    net = nn.DataParallel(wresnet(nclass, 28, 10).cuda())
+    net = nn.DataParallel(VGG('VGG16', nclass, img_width=img_width).cuda())
 else:
     raise NotImplementedError('Invalid model')
 
@@ -100,7 +113,7 @@ def test(epoch):
 epochs = [80, 60, 40, 20]
 count = 0
 for epoch in epochs:
-    optimizer = Adam(net.parameters(), lr=opt.lr)
+    optimizer = SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5.0e-4)
     for _ in range(epoch):
         train(count)
         test(count)

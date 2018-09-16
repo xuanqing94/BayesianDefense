@@ -1,16 +1,15 @@
 #!/bin/bash
 
-lr=0.0001
-data=cifar10
-root=~/data/cifar10-py
-model=wresnet
+lr=0.01
+data=imagenet-sub
+root=/nvme0
+model=vgg
 model_out=./checkpoint/${data}_${model}_plain
 echo "model_out: " ${model_out}
-CUDA_VISIBLE_DEVICES=0,1,2,3 ./main_plain.py \
+CUDA_VISIBLE_DEVICES=4 ./main_plain.py \
                         --lr ${lr} \
                         --data ${data} \
                         --model ${model} \
                         --root ${root} \
                         --model_out ${model_out}.pth \
-                        --resume \
                         > >(tee ${model_out}.txt) 2> >(tee error.txt)

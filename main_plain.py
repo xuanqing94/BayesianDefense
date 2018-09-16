@@ -39,7 +39,7 @@ if opt.data == 'cifar10':
     testset = torchvision.datasets.CIFAR10(root=opt.root, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 elif opt.data == 'imagenet-sub':
-    nclass = 153
+    nclass = 143
     img_width = 128
     transform_train = transforms.Compose([
         transforms.RandomResizedCrop(128, scale=(0.8, 0.9), ratio=(1.0, 1.0)),

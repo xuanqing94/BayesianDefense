@@ -20,4 +20,14 @@ This is the official repository for paper *Bayesian Defense*
 + `Adv`: Adversarial training (from )
 + `Adv_vi`: Adversarial training + Variational Inference
 
-# Howto run
+# Howto run (for Chongruo)
+### Baselines
+1. `vim ./train_adv.sh` change `--root` to data path, change `CUDA_VISIBLE_DEVICES` to use as many GPUs as you can.
+2. `./train_adv.sh` to execute
+
+
+### Our method (run it ASAP.)
+1. `vim ./train_adv_vi.sh` change `--root` to data path, change `CUDA_VISIBLE_DEVICES` to use ONLY ONE GPU!!!.
+2. `./train_adv.sh` to execute
+
+

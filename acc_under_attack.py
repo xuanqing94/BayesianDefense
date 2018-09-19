@@ -14,53 +14,104 @@ from attacker.pgd import Linf_PGD
 
 # arguments
 parser = argparse.ArgumentParser(description='Bayesian Inference')
-parser.add_argument('--model_in', default='./checkpoint/cifar10_vgg_plain.pth', type=str)
-parser.add_argument('--eps', type=float, required=True)
+parser.add_argument('--model', type=str, required=True)
+parser.add_argument('--defense', type=str, required=True)
+parser.add_argument('--data', type=str, required=True)
+parser.add_argument('--root', type=str, required=True)
+parser.add_argument('--n_ensemble', type=int, required=True)
+parser.add_argument('--steps', type=int, required=True)
+parser.add_argument('--max_norm', type=str, required=True)
+
 opt = parser.parse_args()
+
+opt.max_norm = [float(s) for s in opt.max_norm.split(',')]
 
 # dataset
 print('==> Preparing data..')
-transform_test = transforms.Compose([
-    transforms.ToTensor(),
-])
-testset = torchvision.datasets.CIFAR10(root='/home/luinx/data/cifar10-py', train=False, download=True, transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=True, num_workers=2)
+if opt.data == 'cifar10':
+    nclass = 10
+    img_width = 32
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    testset = torchvision.datasets.CIFAR10(root='/home/luinx/data/cifar10-py', train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=True, num_workers=2)
+elif opt.data == 'stl10':
+    nclass = 10
+    img_width = 96
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        ])
+    testset = torchvision.datasets.STL10(root=opt.root, split='test', transform=transform_test, download=True)
+    testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
+
+elif opt.data == 'fashion':
+    nclass = 10
+    img_width = 28
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    testset = torchvision.datasets.FashionMNIST(root=opt.root, train=False, transform=transform_test, download=True)
+    testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
+else:
+    raise ValueError(f'invlid dataset: {opt.data}')
 
 # load model
-model = nn.DataParallel(VGG('VGG16', 10))
-#model = VGG(1, 1, -1, 'VGG16')
-#model = VGG(opt.sigma_0, 1, 'VGG16', init_noise=0.2, inner_noise=0.1, init_s=-1)
-#model = ResNet18(opt.sigma_0, 1)
-model.load_state_dict(torch.load(opt.model_in))
-model.cuda()
-model.eval() # must set to evaluation mode
+if opt.model == 'vgg':
+    if opt.defense in ('plain', 'adv'):
+        from models.vgg import VGG
+        net = nn.DataParallel(VGG('VGG16', nclass, img_width=img_width), device_ids=range(1))
+        net.load_state_dict(torch.load(f'./checkpoint/{opt.data}_{opt.model}_{opt.defense}.pth'))
+    elif opt.defense in ('adv_vi'):
+        from models.vgg_vi import VGG
+        net = nn.DataParallel(VGG(1.0, 1.0, 1.0, 'VGG16', 10, img_width=img_width), device_ids=range(1))
+elif opt.model == 'tiny':
+    if opt.defense in ('plain', 'adv'):
+        from models.tiny import Tiny
+        net = nn.DataParallel(Tiny(nclass), device_ids=range(1))
+    elif opt.defense in ('adv_vi'):
+        from models.tiny_vi import Tiny
+        net = nn.DataParallel(Tiny(1.0, 1.0, 1.0, nclass), device_ids=range(1))
+elif opt.model == 'aaron':
+    if opt.defense in ('plain', 'adv'):
+        from models.aaron import Aaron
+        net = nn.DataParallel(Aaron(nclass), device_ids=range(1))
+    elif opt.defense in ('adv_vi'):
+        from models.aaron_vi import Aaron
+        net = nn.DataParallel(Aaron(1.0, 1.0, 1.0, nclass), device_ids=range(1))
+else:
+    raise ValueError('invalid opt.model')
+net.load_state_dict(torch.load(f'./checkpoint/{opt.data}_{opt.model}_{opt.defense}.pth'))
+net.cuda()
+net.eval() # must set to evaluation mode
 loss_f = nn.CrossEntropyLoss()
 softmax = nn.Softmax(dim=1)
 cudnn.benchmark = True
 
-def ensemble_inference(x_in, nclass, steps):
+def ensemble_inference(x_in):
     batch = x_in.size(0)
     prob = torch.FloatTensor(batch, nclass).zero_().cuda()
-    for _ in range(steps):
-        p = softmax(model(x_in)[0])
-        prob.add_(p)
+    with torch.no_grad():
+        for _ in range(opt.n_ensemble):
+            p = softmax(net(x_in)[0])
+            prob.add_(p)
     return torch.max(prob, dim=1)[1]
 
 # Iterate over test set
-correct = 0
-total = 0
-max_iter = 100
-for it, (x, y) in enumerate(testloader):
-    x, y = x.cuda(), y.cuda()
-    x_adv = Linf_PGD(x, y, model, 20, opt.eps)
-    #pred = torch.max(model(x_adv), dim=1)[1]
-    pred = ensemble_inference(x_adv, 10, 20)
-    correct += torch.sum(pred.eq(y)).item()
-    total += y.numel()
-    if it >= max_iter:
-        break
-
-print(f'Accuracy: {correct/total}')
+print('#norm, accuracy')
+for eps in opt.max_norm:
+    correct = 0
+    total = 0
+    max_iter = 100
+    for it, (x, y) in enumerate(testloader):
+        x, y = x.cuda(), y.cuda()
+        x_adv = Linf_PGD(x, y, net, opt.steps, eps)
+        pred = ensemble_inference(x_adv)
+        correct += torch.sum(pred.eq(y)).item()
+        total += y.numel()
+        if it >= max_iter:
+            break
+    print(f'{eps}, {correct/total}')
 
 
 

@@ -3,11 +3,11 @@
 lr=0.01
 steps=10
 max_norm=0.03125
-sigma_0=0.05
-init_s=0.05
-data=cifar10
-root=~/data/cifar10-py
-model=wresnet
+sigma_0=0.08
+init_s=0.08
+data=stl10
+root=~/data/stl10
+model=aaron
 model_out=./checkpoint/${data}_${model}_adv_vi
 echo "model_out: " ${model_out}
 CUDA_VISIBLE_DEVICES=0 ./main_adv_vi.py \
@@ -20,4 +20,5 @@ CUDA_VISIBLE_DEVICES=0 ./main_adv_vi.py \
                         --model ${model} \
                         --root ${root} \
                         --model_out ${model_out}.pth \
-                        > >(tee ${model_out}.txt) 2> >(tee error.txt)
+                        #--resume \
+                        #> >(tee ${model_out}.txt) 2> >(tee error.txt)

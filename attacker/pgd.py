@@ -6,6 +6,8 @@ from .linf_sgd import Linf_SGD
 # performs Linf-constraint PGD attack w/o noise
 # @epsilon: radius of Linf-norm ball
 def Linf_PGD(x_in, y_true, net, steps, eps):
+    if eps == 0:
+        return x_in
     training = net.training
     if training:
         net.eval()

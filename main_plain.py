@@ -73,9 +73,9 @@ elif opt.data == 'stl10':
 
 elif opt.data == 'imagenet-sub':
     nclass = 143
-    img_width = 128
+    img_width = 64
     transform_train = transforms.Compose([
-        transforms.RandomResizedCrop(128, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
+        transforms.RandomResizedCrop(img_width, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
     ])
@@ -155,6 +155,8 @@ def test(epoch):
 # Go
 if opt.data == 'cifar10':
     epochs = [80, 60, 40, 20]
+elif opt.data == 'imagenet-sub':
+    epochs = [30, 20, 20, 10]
 elif opt.data == 'fashion':
     epochs = [30, 20, 10]
 elif opt.data == 'stl10':

@@ -84,6 +84,7 @@ elif opt.data == 'imagenet-sub':
         transforms.ToTensor(),
     ])
     transform_test = transforms.Compose([
+        transforms.Resize(img_width),
         transforms.ToTensor(),
     ])
     trainset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat', transform=transform_train)

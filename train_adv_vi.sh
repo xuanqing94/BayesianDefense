@@ -2,7 +2,7 @@
 
 lr=0.01
 steps=10
-max_norm=0.03125
+max_norm=0.01
 sigma_0=0.08
 init_s=0.08
 data=imagenet-sub

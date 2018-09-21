@@ -2,7 +2,7 @@
 
 lr=0.01
 steps=10
-max_norm=0.03125
+max_norm=0.01
 data=imagenet-sub
 root=/nvme0/
 model=vgg

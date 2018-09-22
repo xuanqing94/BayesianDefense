@@ -1,4 +1,5 @@
 import shutil
+import os
 
 def read_f():
     classes = []
@@ -10,12 +11,19 @@ def read_f():
     return classes
 
 if __name__ == "__main__":
-    source_dir = '/mnt/lustre/wuchongruo/projects/xq/data/prepare/train'
-    target_dir = '/mnt/lustre/wuchongruo/projects/xq/BayesianDefense/data/train'
+    source_dir = '/mnt/lustre/share/images/train'
+    target_dir = '/mnt/lustre/wuchongruo/projects/xq/data/train'
     classes = read_f()
     for i, name in enumerate(classes):
         print(f'[{i}/{len(classes)}]{name}')
-        shutil.copytree(source_dir + '/' + name, target_dir + '/' + name)
+        
+        src = source_dir + '/' + name
+        dest = target_dir + '/' + name
+
+        #shutil.copytree(src, dest)
+        cmd = '''cp -r ''' + src + " " + dest
+        os.system(cmd)
+        
     print('Done')
 
 

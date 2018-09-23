@@ -14,7 +14,7 @@ def read_f():
 if __name__ == "__main__":
     #source_dir = '/mnt/lustre/wuchongruo/projects/xq/data/prepare/val'
     source_dir = '/mnt/lustre/share/images/val'
-    target_dir = '/mnt/lustre/wuchongruo/projects/xq/BayesianDefense/data/sngan_dog_cat_val'
+    target_dir = '/mnt/lustre/wuchongruo/projects/xq/data/val'
     id_classes = read_f()
     
     #all_files = glob.glob(source_dir+'/*.JPEG')
@@ -40,30 +40,6 @@ if __name__ == "__main__":
             source_file_path = os.path.join(source_dir, cur_file_name)
             dest_file_path = os.path.join(target_dir, cur_file_class_name, cur_file_name)
             copyfile(source_file_path, dest_file_path)
-
-
-    '''
-    for ind, each_file_full in enumerate(all_files):
-        print(ind)
-        #print(each_file_full)
-        each_file_name = each_file_full.split('/')[-1]
-        each_file_class = 'n' + each_file_name.split('.')[0].split('_')[-1]
-        
-        #print(each_file_class)
-        each_file_id = classes_id[each_file_class]
-        if each_file_id >= 151 and each_file_id < 294:
-            class_dir_path = os.path.join(target_dir, each_file_class)
-            if not os.path.exists(class_dir_path):
-                os.mkdir(class_dir_path)
-            
-            dest_file_path = os.path.join(target_dir, each_file_class, each_file_name)
-            copyfile(each_file_full, dest_file_path)
-    '''
-
-
-
-
-
 
 
 

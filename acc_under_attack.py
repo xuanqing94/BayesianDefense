@@ -44,7 +44,6 @@ elif opt.data == 'stl10':
         ])
     testset = torchvision.datasets.STL10(root=opt.root, split='test', transform=transform_test, download=True)
     testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
-
 elif opt.data == 'fashion':
     nclass = 10
     img_width = 28
@@ -53,6 +52,15 @@ elif opt.data == 'fashion':
     ])
     testset = torchvision.datasets.FashionMNIST(root=opt.root, train=False, transform=transform_test, download=True)
     testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
+elif opt.data == 'imagenet-sub':
+    nclass = 143
+    img_width = 64
+    transform_test = transforms.Compose([
+        transforms.Resize(img_width),
+        transforms.ToTensor(),
+    ])
+    testset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat_val', transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
 else:
     raise ValueError(f'invlid dataset: {opt.data}')
 
@@ -62,23 +70,32 @@ if opt.model == 'vgg':
         from models.vgg import VGG
         net = nn.DataParallel(VGG('VGG16', nclass, img_width=img_width), device_ids=range(1))
         net.load_state_dict(torch.load(f'./checkpoint/{opt.data}_{opt.model}_{opt.defense}.pth'))
-    elif opt.defense in ('adv_vi'):
+    elif opt.defense in ('vi', 'adv_vi'):
         from models.vgg_vi import VGG
-        net = nn.DataParallel(VGG(1.0, 1.0, 1.0, 'VGG16', 10, img_width=img_width), device_ids=range(1))
+        net = nn.DataParallel(VGG(1.0, 1.0, 1.0, 'VGG16', nclass, img_width=img_width), device_ids=range(1))
+    elif opt.defense in ('rse'):
+        from models.vgg_rse import VGG
+        net = nn.DataParallel(VGG('VGG16', nclass, 0.2, 0.1, img_width=img_width), device_ids=range(1))
 elif opt.model == 'tiny':
     if opt.defense in ('plain', 'adv'):
         from models.tiny import Tiny
         net = nn.DataParallel(Tiny(nclass), device_ids=range(1))
-    elif opt.defense in ('adv_vi'):
+    elif opt.defense in ('vi', 'adv_vi'):
         from models.tiny_vi import Tiny
         net = nn.DataParallel(Tiny(1.0, 1.0, 1.0, nclass), device_ids=range(1))
+    elif opt.defense in ('rse'):
+        from models.tiny_rse import Tiny
+        net = nn.DataParallel(Tiny(nclass, 0.2, 0.1), device_ids=range(1))
 elif opt.model == 'aaron':
     if opt.defense in ('plain', 'adv'):
         from models.aaron import Aaron
         net = nn.DataParallel(Aaron(nclass), device_ids=range(1))
-    elif opt.defense in ('adv_vi'):
+    elif opt.defense in ('vi', 'adv_vi'):
         from models.aaron_vi import Aaron
         net = nn.DataParallel(Aaron(1.0, 1.0, 1.0, nclass), device_ids=range(1))
+    elif opt.defense in ('rse'):
+        from models.aaron_rse import Aaron
+        net = nn.DataParallel(Aaron(nclass, 0.2, 0.1), device_ids=range(1))
 else:
     raise ValueError('invalid opt.model')
 net.load_state_dict(torch.load(f'./checkpoint/{opt.data}_{opt.model}_{opt.defense}.pth'))

@@ -10,7 +10,7 @@ root=/nvme0
 model=vgg
 model_out=./checkpoint/${data}_${model}_adv_vi
 echo "model_out: " ${model_out}
-CUDA_VISIBLE_DEVICES=4 ./main_adv_vi.py \
+CUDA_VISIBLE_DEVICES=4 python ./main_adv_vi.py \
                         --lr ${lr} \
                         --step ${steps} \
                         --max_norm ${max_norm} \

@@ -1,7 +1,7 @@
 *.pyc
 *.pth
 *.txt
-
+!dirname_to_label.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -2,15 +2,15 @@
 
 lr=0.01
 steps=10
-max_norm=0.03125
-sigma_0=0.05
-init_s=0.05
+max_norm=0.01
+sigma_0=0.08
+init_s=0.08
 data=imagenet-sub
-root=/data1/xqliu
+root=/nvme0
 model=vgg
 model_out=./checkpoint/${data}_${model}_adv_vi
 echo "model_out: " ${model_out}
-CUDA_VISIBLE_DEVICES=0 ./main_adv_vi.py \
+CUDA_VISIBLE_DEVICES=4 python ./main_adv_vi.py \
                         --lr ${lr} \
                         --step ${steps} \
                         --max_norm ${max_norm} \
@@ -20,4 +20,5 @@ CUDA_VISIBLE_DEVICES=0 ./main_adv_vi.py \
                         --model ${model} \
                         --root ${root} \
                         --model_out ${model_out}.pth \
-                        > >(tee ${model_out}.txt) 2> >(tee error.txt)
+                        #--resume \
+                        #> >(tee ${model_out}.txt) 2> >(tee error.txt)

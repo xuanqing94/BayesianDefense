@@ -38,15 +38,49 @@ if opt.data == 'cifar10':
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
     testset = torchvision.datasets.CIFAR10(root=opt.root, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+
+elif opt.data == 'fashion':
+    nclass = 10
+    img_width = 28
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(28, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor()
+    ])
+    trainset = torchvision.datasets.FashionMNIST(root=opt.root, train=True, transform=transform_train, download=True)
+    trainloader = torch.utils.data.DataLoader(dataset=trainset, batch_size=128, shuffle=True)
+    testset = torchvision.datasets.FashionMNIST(root=opt.root, train=False, transform=transform_test, download=True)
+    testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
+
+elif opt.data == 'stl10':
+    nclass = 10
+    img_width = 96
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(96, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor()
+        ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        ])
+    trainset = torchvision.datasets.STL10(root=opt.root, split='train', transform=transform_train, download=True)
+    trainloader = torch.utils.data.DataLoader(dataset=trainset, batch_size=128, shuffle=True)
+    testset = torchvision.datasets.STL10(root=opt.root, split='test', transform=transform_test, download=True)
+    testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
+
 elif opt.data == 'imagenet-sub':
     nclass = 143
-    img_width = 128
+    img_width = 64
     transform_train = transforms.Compose([
-        transforms.RandomResizedCrop(128, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
+        transforms.RandomResizedCrop(img_width, scale=(0.8, 0.9), ratio=(1.0, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
     ])
     transform_test = transforms.Compose([
+        transforms.Resize(img_width),
         transforms.ToTensor(),
     ])
     trainset = torchvision.datasets.ImageFolder(opt.root+'/sngan_dog_cat', transform=transform_train)
@@ -61,6 +95,12 @@ else:
 if opt.model == 'vgg':
     from models.vgg import VGG
     net = nn.DataParallel(VGG('VGG16', nclass, img_width=img_width).cuda())
+elif opt.model == 'tiny':
+    from models.tiny import Tiny
+    net = nn.DataParallel(Tiny(nclass).cuda())
+elif opt.model == 'aaron':
+    from models.aaron import Aaron
+    net = nn.DataParallel(Aaron(nclass).cuda())
 else:
     raise NotImplementedError('Invalid model')
 
@@ -114,7 +154,14 @@ def test(epoch):
     torch.save(net.state_dict(), opt.model_out)
 
 # Go
-epochs = [80, 60, 40, 20]
+if opt.data == 'cifar10':
+    epochs = [80, 60, 40, 20]
+elif opt.data == 'imagenet-sub':
+    epochs = [30, 20, 20, 10]
+elif opt.data == 'fashion':
+    epochs = [30, 20, 10]
+elif opt.data == 'stl10':
+    epochs = [60, 40, 20]
 count = 0
 for epoch in epochs:
     optimizer = SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5.0e-4)

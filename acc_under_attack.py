@@ -10,8 +10,8 @@ import torchvision.transforms as transforms
 
 #from models.resnet import ResNet18
 from models.vgg import VGG
-from attacker.pgd import Linf_PGD
-
+from attacker.pgd import Linf_PGD, L2_PGD
+from attacker.cw import cw
 # arguments
 parser = argparse.ArgumentParser(description='Bayesian Inference')
 parser.add_argument('--model', type=str, required=True)
@@ -21,10 +21,20 @@ parser.add_argument('--root', type=str, required=True)
 parser.add_argument('--n_ensemble', type=int, required=True)
 parser.add_argument('--steps', type=int, required=True)
 parser.add_argument('--max_norm', type=str, required=True)
-
+parser.add_argument('--attack', type=str, default='Linf')
 opt = parser.parse_args()
 
 opt.max_norm = [float(s) for s in opt.max_norm.split(',')]
+
+# attack
+if opt.attack == 'Linf':
+    attack_f = Linf_PGD
+elif opt.attack == 'L2':
+    attack_f = L2_PGD
+elif opt.attack == 'CW':
+    attack_f = cw
+else:
+    raise ValueError(f'invalid attach function: {opt.attack}')
 
 # dataset
 print('==> Preparing data..')
@@ -114,21 +124,34 @@ def ensemble_inference(x_in):
             prob.add_(p)
     return torch.max(prob, dim=1)[1]
 
+def distance(x_adv, x):
+    diff = (x_adv - x).view(x.size(0), -1)
+    if opt.attack in ('CW', 'L2'):
+        out = torch.sqrt(torch.sum(diff * diff) / x.size(0)).item()
+        return out
+    elif opt.attack in ('Linf'):
+        out = torch.mean(torch.max(torch.abs(diff), 1)[0]).item()
+        return out
+
 # Iterate over test set
 print('#norm, accuracy')
 for eps in opt.max_norm:
     correct = 0
     total = 0
     max_iter = 100
+    distortion = 0
+    batch = 0
     for it, (x, y) in enumerate(testloader):
         x, y = x.cuda(), y.cuda()
-        x_adv = Linf_PGD(x, y, net, opt.steps, eps)
+        x_adv = attack_f(x, y, net, opt.steps, eps)
         pred = ensemble_inference(x_adv)
         correct += torch.sum(pred.eq(y)).item()
         total += y.numel()
+        distortion += distance(x_adv, x)
+        batch += 1
         if it >= max_iter:
             break
-    print(f'{eps}, {correct/total}')
+    print(f'{distortion/batch}, {correct/total}')
 
 
 

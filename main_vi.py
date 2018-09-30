@@ -91,6 +91,8 @@ elif opt.data == 'imagenet-sub':
 else:
     raise NotImplementedError('Invalid dataset')
 
+print(len(trainset), len(testset))
+
 # Model
 if opt.model == 'vgg':
     from models.vgg_vi import VGG

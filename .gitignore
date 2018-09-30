@@ -2,6 +2,7 @@
 *.pth
 *.txt
 !dirname_to_label.txt
+/checkpoint
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

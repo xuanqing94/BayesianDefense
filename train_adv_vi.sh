@@ -5,6 +5,7 @@ steps=10
 max_norm=0.01
 sigma_0=0.08
 init_s=0.08
+alpha=1.0
 data=imagenet-sub
 root=/nvme0
 model=vgg

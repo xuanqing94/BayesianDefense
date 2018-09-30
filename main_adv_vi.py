@@ -24,6 +24,7 @@ parser.add_argument('--data', required=True, type=str, help='dataset name')
 parser.add_argument('--model', required=True, type=str, help='model name')
 parser.add_argument('--root', required=True, type=str, help='path to dataset')
 parser.add_argument('--model_out', required=True, type=str, help='output path')
+parser.add_argument('--alpha', default=1.0, type=float, help=r'$\alpha$ in our paper')
 parser.add_argument('--resume', action='store_true', help='resume')
 opt = parser.parse_args()
 opt.init_s = math.log(opt.init_s) # init_s is log(std)
@@ -114,7 +115,7 @@ if opt.resume:
 cudnn.benchmark = True
 
 def get_beta(epoch_idx, N):
-    return 1.0 / N #/ 100
+    return opt.alpha / N
 
 # Training
 def train(epoch):

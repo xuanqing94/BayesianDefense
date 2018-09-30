@@ -21,7 +21,7 @@ This is the official repository for paper [*Adv-BNN: Improved Adversarial Defens
 
 ## Howto
 ### Run plain
-```python
+```bash
 lr=0.01
 data=imagenet-sub # or `cifar10`, `stl10`
 root=/path/to/data
@@ -54,6 +54,7 @@ CUDA_VISIBLE_DEVICES=2 python ./main_rse.py \
                         --noise_init ${noise_init} \
                         --noise_inner ${noise_inner} \
 ```
+
 ### Run Adv. training
 ```bash
 lr=0.01
@@ -73,6 +74,7 @@ CUDA_VISIBLE_DEVICES=0,1,2,3 python ./main_adv.py \
                         --root ${root} \
                         --model_out ${model_out}.pth \
 ```
+
 ### Run our method
 ```bash
 lr=0.01

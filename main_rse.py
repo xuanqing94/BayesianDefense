@@ -40,23 +40,6 @@ if opt.data == 'cifar10':
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
     testset = torchvision.datasets.CIFAR10(root=opt.root, train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
-
-elif opt.data == 'fashion':
-    nclass = 10
-    img_width = 28
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(28, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor()
-    ])
-    transform_test = transforms.Compose([
-        transforms.ToTensor()
-    ])
-    trainset = torchvision.datasets.FashionMNIST(root=opt.root, train=True, transform=transform_train, download=True)
-    trainloader = torch.utils.data.DataLoader(dataset=trainset, batch_size=128, shuffle=True)
-    testset = torchvision.datasets.FashionMNIST(root=opt.root, train=False, transform=transform_test, download=True)
-    testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
-
 elif opt.data == 'stl10':
     nclass = 10
     img_width = 96
@@ -72,7 +55,6 @@ elif opt.data == 'stl10':
     trainloader = torch.utils.data.DataLoader(dataset=trainset, batch_size=128, shuffle=True)
     testset = torchvision.datasets.STL10(root=opt.root, split='test', transform=transform_test, download=True)
     testloader = torch.utils.data.DataLoader(dataset=testset, batch_size=100, shuffle=False)
-
 elif opt.data == 'imagenet-sub':
     nclass = 143
     img_width = 64
@@ -97,9 +79,6 @@ else:
 if opt.model == 'vgg':
     from models.vgg_rse import VGG
     net = nn.DataParallel(VGG('VGG16', nclass, opt.noise_init, opt.noise_inner, img_width=img_width).cuda())
-elif opt.model == 'tiny':
-    from models.tiny_rse import Tiny
-    net = nn.DataParallel(Tiny(nclass, opt.noise_init, opt.noise_inner).cuda())
 elif opt.model == 'aaron':
     from models.aaron_rse import Aaron
     net = nn.DataParallel(Aaron(nclass, opt.noise_init, opt.noise_inner).cuda())

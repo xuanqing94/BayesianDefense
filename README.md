@@ -11,6 +11,9 @@ This is the official repository for paper [*Adv-BNN: Improved Adversarial Defens
 + VGG16 (for CIFAR10/ImageNet-143)
 + Aaron (for STL10)
 
+## Checkpoints
+Temprarily hosted on http://muradin.cs.ucdavis.edu:9876
+
 ## Defense methods
 + `Plain`: No defense
 + `RSE`: Random Self-ensemble

@@ -12,7 +12,7 @@ This is the official repository for paper [*Adv-BNN: Improved Adversarial Defens
 + Aaron (for STL10)
 
 ## Checkpoints
-Temprarily hosted on http://muradin.cs.ucdavis.edu:9876
+Please follow the google drive [link](https://drive.google.com/drive/folders/1uAP6q-fSADhlkx-YNBipPzv4KCvC_3_J?usp=sharing)
 
 ## Defense methods
 + `Plain`: No defense
